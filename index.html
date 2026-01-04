@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel Aim Assist - Dev</title>
+
+<style>
+body{
+  background:#020611;
+  font-family:Arial;
+  color:white;
+  margin:0;
+}
+
+.screen{
+  display:none;
+  height:100vh;
+  padding:25px;
+}
+
+.active{display:block;}
+
+h1{
+  text-align:center;
+  font-size:22px;
+  letter-spacing:2px;
+}
+
+.panel{
+  background:linear-gradient(145deg,#081a2d,#020611);
+  border:1px solid cyan;
+  border-radius:14px;
+  padding:20px;
+  margin-top:15px;
+  box-shadow:0 0 25px rgba(0,255,255,.2);
+}
+
+label{
+  font-size:14px;
+  opacity:.8;
+}
+
+.sliderbox{
+  margin:10px 0 20px 0;
+}
+
+input[type=range]{
+  width:100%;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  background:cyan;
+  border:none;
+  font-size:16px;
+  border-radius:10px;
+  margin-top:10px;
+}
+
+#loginBox{
+  text-align:center;
+  margin-top:35vh;
+}
+
+input[type=password]{
+  width:90%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+}
+.info{
+  text-align:center;
+  font-size:12px;
+  opacity:.6;
+}
+
+.value{
+  float:right;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="screen active">
+  <div id="loginBox">
+    <h1>ADMIN PANEL</h1>
+    <input id="pass" type="password" placeholder="Senha de acesso">
+    <button onclick="login()">Entrar</button>
+    <p class="info">Conexão Local Dev</p>
+  </div>
+</div>
+
+<!-- PAINEL -->
+<div id="painel" class="screen">
+
+<h1>PAINEL AIM ASSIST</h1>
+
+<div class="panel">
+  <label>Força do Assist <span id="vAssist" class="value">50%</span></label>
+  <div class="sliderbox">
+    <input id="assist" type="range" min="0" max="100" value="50">
+  </div>
+
+  <label>FOV <span id="vFov" class="value">120</span></label>
+  <div class="sliderbox">
+    <input id="fov" type="range" min="0" max="270" value="120">
+  </div>
+
+  <label>Atraso de Reação (ms) <span id="vDelay" class="value">100</span></label>
+  <div class="sliderbox">
+    <input id="delay" type="range" min="0" max="500" value="100">
+  </div>
+
+  <label>Ruído (estabilidade) <span id="vNoise" class="value">10%</span></label>
+  <div class="sliderbox">
+    <input id="noise" type="range" min="0" max="100" value="10">
+  </div>
+
+  <button onclick="enviar()">ENVIAR PARA O JOGO</button>
+</div>
+
+
+<div class="panel">
+  <h3>TELEMETRIA</h3>
+  <p>Headshots: <span id="heads">0</span></p>
+  <p>Reação média: <span id="react">0 ms</span></p>
+  <p>Estabilidade: <span id="stab">0%</span></p>
+</div>
+
+<p class="info">Conexão: Localhost 5000</p>
+
+</div>
+
+<script>
+const PASSWORD = "admin123";
+
+function login(){
+  if(document.getElementById("pass").value === PASSWORD){
+    document.getElementById("login").classList.remove("active");
+    document.getElementById("painel").classList.add("active");
+  } else alert("Senha incorreta");
+}
+
+function atualizarValores(){
+  document.getElementById("vAssist").innerText = assist.value+"%";
+  document.getElementById("vFov").innerText = fov.value;
+  document.getElementById("vDelay").innerText = delay.value;
+  document.getElementById("vNoise").innerText = noise.value+"%";
+}
+
+assist.oninput = atualizarValores;
+fov.oninput = atualizarValores;
+delay.oninput = atualizarValores;
+noise.oninput = atualizarValores;
+
+function enviar(){
+  const data = {
+    assist: assist.value,
+    fov: fov.value,
+    delay: delay.value,
+    noise: noise.value
+  };
+
+  fetch("http://localhost:5000/aim",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)
+  }).then(()=>alert("Config enviada"))
+  .catch(()=>alert("Jogo não conectado"));
+}
+
+// Opcional: receber telemetria
+setInterval(()=>{
+  fetch("http://localhost:5000/data")
+    .then(r=>r.json())
+    .then(d=>{
+      heads.innerText = d.heads;
+      react.innerText = d.reaction+" ms";
+      stab.innerText = d.stability+"%";
+    }).catch(()=>{});
+},1000);
+</script>
+
+</body>
+</html>
